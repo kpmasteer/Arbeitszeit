@@ -1,37 +1,17 @@
-# Arbeitszeit PWA Paket
+# Arbeitszeit PWA
 
-Dieses Paket enthält alles, was um deine vorhandene HTML-Datei herum benötigt wird:
+Dieses Paket enthält deine echte `index.html` mit eingebauten PWA-Dateien.
 
-- `manifest.webmanifest`
-- `sw.js`
-- `ArbeitszeitIcon.png`
-- `icons/icon-192.png`
-- `icons/icon-512.png`
-- `icons/apple-touch-icon.png`
-- `icons/favicon-32.png`
-- `index.html` als PWA-fertige Vorlage
+## Enthalten
+
+- `index.html` – deine Arbeitszeit-App mit PWA-Head-Tags und Service-Worker-Registrierung
+- `manifest.webmanifest` – PWA-Manifest für Installation auf dem Homescreen
+- `sw.js` – Service Worker für Offline-Cache nach dem ersten Laden
+- `ArbeitszeitIcon.png` – Original-Appicon
+- `icons/` – erzeugte Icon-Größen für Android/iPhone/Browser
 
 ## Wichtig
 
-Wenn deine eigentliche App schon als HTML-Datei existiert:
+Zum Installieren als PWA muss die App über `https://` laufen, z. B. GitHub Pages, Render oder ein anderer HTTPS-Host. Lokal per Datei-Doppelklick funktioniert die App zwar, aber PWA-Installation und Service Worker laufen dort meist nicht.
 
-1. Benenne sie in `index.html` um.
-2. Kopiere aus der Vorlage die PWA-Zeilen aus dem `<head>` in deine HTML.
-3. Kopiere den Service-Worker-Registrierungsblock kurz vor `</body>`.
-4. Lege `manifest.webmanifest`, `sw.js`, `ArbeitszeitIcon.png` und den Ordner `icons` daneben.
-
-## Lokaler Test
-
-Im Ordner starten:
-
-```bash
-python3 -m http.server 8080
-```
-
-Dann öffnen:
-
-```text
-http://localhost:8080
-```
-
-Auf dem iPhone muss die Seite über Safari geöffnet werden. Für echtes Installieren auf dem Homescreen ist normalerweise HTTPS oder ein sauber erreichbarer lokaler Server nötig.
+Wenn auf dem Handy noch ein altes Icon erscheint: alte PWA vom Homescreen löschen, Browser-Cache leeren oder die App erneut hinzufügen.

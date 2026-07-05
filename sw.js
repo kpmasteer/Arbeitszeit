@@ -38,6 +38,10 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(cachedResponse => {
       return cachedResponse || fetch(event.request).then(response => {
         return response;
+      }).catch(() => {
+        if (event.request.mode === "navigate") {
+          return caches.match("./index.html");
+        }
       });
     })
   );

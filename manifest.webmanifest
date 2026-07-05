@@ -1,7 +1,7 @@
 {
   "name": "Arbeitszeit",
   "short_name": "Arbeitszeit",
-  "description": "PWA zur Erfassung von Arbeitszeiten, Urlaub, Krankheit und Sollzeiten.",
+  "description": "PWA zur lokalen Erfassung von Arbeitszeiten, Urlaub, Krankheit und Sollzeiten.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
