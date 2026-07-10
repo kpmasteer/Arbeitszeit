@@ -956,12 +956,14 @@
     $('monthLabel').textContent = fmtMonth.format(new Date(y,m,1));
     $('mRequired').textContent = minutesToText(s.required);
     $('mWorked').textContent = minutesToText(s.worked);
-    $('mDaily').textContent = state.settings.dailyTargetMode === 'fixed' ? `${minutesToText(s.daily)} / ${decimalHoursLabel(state.settings.fixedDailyTargetHours)} h` : minutesToText(s.daily);
+    $('mDaily').textContent = state.settings.dailyTargetMode === 'fixed' ? `${minutesToText(s.daily)} · rechnet mit ${decimalHoursLabel(state.settings.fixedDailyTargetHours)} h` : minutesToText(s.daily);
     $('mDiff').textContent = (s.diff >= 0 ? '+' : '') + minutesToText(s.diff);
     $('mDiff').className = 'value ' + (s.diff >= 0 ? 'positive' : 'negative');
     $('mAccount').textContent = `Zeitkonto: ${s.account >= 0 ? '+' : ''}${minutesToText(s.account)}`;
     $('mAccount').className = 'row-sub ' + (s.account >= 0 ? 'positive' : 'negative');
-    $('dashRemaining').textContent = s.diff >= 0 ? '+' + minutesToText(s.diff) : minutesToText(s.remaining);
+    $('dashRemaining').textContent = s.diff >= 0
+      ? '+' + minutesToText(s.diff)
+      : `${minutesToText(s.remaining)} / ${minutesToDecimalLabel(s.remaining)} h`;
     $('dashRemainingLabel').textContent = s.diff >= 0 ? 'Überstunden in diesem Monat' : 'Restbedarf in diesem Monat';
     const pct = Math.min(100, Math.round((s.worked / Math.max(1, s.required))*100));
     $('dashProgress').style.width = pct + '%';
