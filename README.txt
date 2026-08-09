@@ -1,4 +1,4 @@
-ARBEITSZEITEN-PWA v0.2.1
+ARBEITSZEITEN-PWA v0.3.0
 =========================
 
 Dies ist weiterhin eine normale PWA. Es ist keine native iPhone-App.
@@ -25,3 +25,4 @@ WICHTIG
 
 
 v0.2.1: Appweite Zeitanzeige wählbar: Stunden:Minuten, Dezimalstunden oder beides.
+v0.3.0: Heutiges Datum beim Erfassen vorausgewählt. Monat und Kalender zu einer mobilfreundlichen Monatsübersicht zusammengeführt.

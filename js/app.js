@@ -2,17 +2,21 @@
   const STORAGE = 'arbeitszeiten-app-prototype-v7-clean-no-demo';
   const fmtMonth = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' });
   const fmtDay = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fmtWeekday = new Intl.DateTimeFormat('de-DE', { weekday: 'short' });
+  const fmtShortMonth = new Intl.DateTimeFormat('de-DE', { month: 'short' });
 
-  const defaultState = () => ({
-    selectedYear: 2026,
-    selectedMonth: 6,
+  const defaultState = () => {
+    const today = new Date();
+    return ({
+    selectedYear: today.getFullYear(),
+    selectedMonth: today.getMonth(),
     settings: {
       monthlyHours: 0,
       calcMode: 'workdays',
       yearVacation: 0,
       workdays: [1,2,3,4,5],
       startBalanceMinutes: 0,
-      startBalanceMonth: '2026-07',
+      startBalanceMonth: monthKey(today.getFullYear(), today.getMonth()),
       dailyTargetMode: 'auto',
       fixedDailyTargetHours: 0,
       timeDisplayMode: 'both'
@@ -21,6 +25,7 @@
     sickDays: [],
     vacations: []
   });
+  };
 
   let state = load();
   migrate();
@@ -293,14 +298,12 @@
     $('dashProgress').style.width = pct + '%';
     $('dashProgressText').textContent = `${pct} % erfüllt · ${formatDuration(s.worked)} von ${formatDuration(s.required)}`;
     $('daysCount').textContent = daysInMonth(y,m);
-    $('calcDaysCount').textContent = calcDays(y,m);
     $('remainingDaily').textContent = formatDuration(s.remainingDaily);
     $('vacDaysMonth').textContent = countMonthMarkedDays(y,m,'vacation');
     renderQuickList(s);
     renderWorkEntries();
     renderSickList();
-    renderMonthTable();
-    renderCalendar();
+    renderMonthOverview();
     renderVacations();
     renderSettings();
   }
@@ -347,74 +350,68 @@
     $('sickList').innerHTML = entries.map(e => `<div class="row"><div><div class="row-title">Krankheit · ${vacationDaysBetween(e.start,e.end)} Tag(e)</div><div class="row-sub">${fmtDay.format(toDate(e.start))} – ${fmtDay.format(toDate(e.end))}${e.note ? ' · '+escapeHtml(e.note) : ''}</div></div><button class="danger small" data-del-sick="${e.id}">Löschen</button></div>`).join('');
     document.querySelectorAll('[data-del-sick]').forEach(btn => btn.onclick = () => { state.sickDays = state.sickDays.filter(e => e.id !== btn.dataset.delSick); save(); render(); });
   }
-  function renderMonthTable() {
-    const y = state.selectedYear, m = state.selectedMonth, rows = [];
-    for (let d=1; d<=daysInMonth(y,m); d++) {
-      const ds = dateStr(y,m,d), date = new Date(y,m,d), vac = vacationOnDate(ds), sick = sickOnDate(ds);
-      const req = requiredForDate(date), credit = automaticCreditOnDate(ds), worked = workedOnDate(ds, y, m), diff = worked - req;
-      let chip = req === 0 ? '<span class="chip blue">Frei</span>' : '<span class="chip blue">Arbeitstag</span>';
-      if (state.settings.dailyTargetMode === 'fixed' && req > 0) chip += ' <span class="chip yellow">Abweichender Tagessoll</span>';
-      if (vac) chip = `<span class="chip ${vac.status === 'approved' ? 'green' : 'yellow'}">Urlaub ${vac.status === 'approved' ? 'genehmigt' : 'beantragt'}</span>${state.settings.dailyTargetMode === 'fixed' ? ' <span class="chip yellow">Abweichender Tagessoll</span>' : ''}`;
-      if (sick) chip = `<span class="chip red">Krank · Soll angerechnet</span>${state.settings.dailyTargetMode === 'fixed' ? ' <span class="chip yellow">Abweichender Tagessoll</span>' : ''}`;
-      const modeText = state.settings.dailyTargetMode === 'fixed' && req > 0 ? ` <span class="row-sub">fester Tagessoll</span>` : '';
-      const creditText = credit ? ` <span class="row-sub">inkl. ${formatDuration(credit)} Sollgutschrift</span>` : '';
-      rows.push(`<tr><td>${fmtDay.format(date)}</td><td>${chip}</td><td>${formatDuration(req)}${modeText}</td><td>${formatDuration(worked)}${creditText}</td><td class="${diff>=0?'positive':'negative'}">${formatDuration(diff, true)}</td></tr>`);
-    }
-    $('monthTable').innerHTML = rows.join('');
-  }
-
   function hasManualDailyWork(dateString) {
     return state.workEntries.some(e => e.type === 'daily' && e.date === dateString && Number(e.minutes || 0) > 0);
   }
-  function renderCalendar() {
-    const y = state.selectedYear, m = state.selectedMonth;
-    const grid = $('calendarGrid');
-    if (!grid) return;
-    const first = new Date(y,m,1);
-    const firstMondayIndex = (first.getDay() + 6) % 7;
-    const dim = daysInMonth(y,m);
-    let html = '';
-    let stats = { worked:0, vacation:0, sick:0, open:0 };
-    for (let i=0; i<firstMondayIndex; i++) html += '<div class="calendar-day empty-cell"></div>';
-    const today = new Date();
-    const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    for (let d=1; d<=dim; d++) {
-      const date = new Date(y,m,d), ds = dateStr(y,m,d);
-      const req = requiredForDate(date);
-      const worked = workedOnDate(ds, y, m);
-      const vac = vacationOnDate(ds), sick = sickOnDate(ds);
-      const manual = hasManualDailyWork(ds);
-      const isFree = req === 0;
-      let cls = 'calendar-day';
-      let label = 'Offen';
-      let chip = '<span class="chip blue">Offen</span>';
-      if (isFree) { cls += ' free'; label = 'Frei'; chip = '<span class="chip blue">Frei</span>'; }
-      if (!isFree && !worked && date <= today0) cls += ' missing';
-      if (manual || (!sick && !vac && worked > 0)) { cls += ' worked'; label = 'Gearbeitet'; chip = '<span class="chip green">Gearbeitet</span>'; stats.worked++; }
-      if (vac) { cls += ' vacation'; label = vac.status === 'approved' ? 'Urlaub genehmigt' : 'Urlaub beantragt'; chip = `<span class="chip ${vac.status === 'approved' ? 'green' : 'yellow'}">Urlaub</span>`; if (!isFree) stats.vacation++; }
-      if (sick) { cls += ' sick'; label = 'Krank'; chip = '<span class="chip red">Krank</span>'; if (!isFree) stats.sick++; }
-      if (!isFree && !worked && !vac && !sick) stats.open++;
-      const diff = worked - req;
-      html += `<div class="${cls}" title="${escapeHtml(label)}">
-        <div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start">
-          <div class="calendar-num">${d}</div>
-          ${chip}
-        </div>
-        <div class="calendar-lines">
-          <div class="calendar-line">Soll: <strong>${formatDuration(req)}</strong></div>
-          <div class="calendar-line">Ist: <strong>${formatDuration(worked)}</strong></div>
-          ${req || worked ? `<div class="calendar-line ${diff>=0?'positive':'negative'}">${formatDuration(diff, true)}</div>` : '<div class="calendar-line">kein Soll</div>'}
-        </div>
-      </div>`;
+  function dayOverview(y, m, d) {
+    const date = new Date(y,m,d), ds = dateStr(y,m,d);
+    const req = requiredForDate(date);
+    const worked = workedOnDate(ds, y, m);
+    const vac = vacationOnDate(ds), sick = sickOnDate(ds);
+    const isFree = req === 0;
+    let status = 'open';
+    let label = 'Noch zu arbeiten';
+    let chip = '<span class="chip blue">Offen</span>';
+    if (isFree) { status = 'free'; label = 'Frei'; chip = '<span class="chip blue">Frei</span>'; }
+    if (hasManualDailyWork(ds) || (!sick && !vac && worked > 0)) {
+      status = 'worked'; label = 'Gearbeitet'; chip = '<span class="chip green">Gearbeitet</span>';
     }
-    const cells = firstMondayIndex + dim;
-    const rest = (7 - (cells % 7)) % 7;
-    for (let i=0; i<rest; i++) html += '<div class="calendar-day empty-cell"></div>';
-    grid.innerHTML = html;
-    $('calWorkedDays').textContent = stats.worked;
-    $('calVacationDays').textContent = stats.vacation;
-    $('calSickDays').textContent = stats.sick;
-    $('calOpenDays').textContent = stats.open;
+    if (vac) {
+      status = 'vacation'; label = vac.status === 'approved' ? 'Urlaub genehmigt' : 'Urlaub beantragt';
+      chip = `<span class="chip ${vac.status === 'approved' ? 'green' : 'yellow'}">Urlaub</span>`;
+    }
+    if (sick) { status = 'sick'; label = 'Krank'; chip = '<span class="chip red">Krank</span>'; }
+    return { date, ds, req, worked, diff: worked - req, status, label, chip, isFree };
+  }
+  function monthDayStats(y, m) {
+    const stats = { worked:0, vacation:0, sick:0, open:0 };
+    for (let d=1; d<=daysInMonth(y,m); d++) {
+      const day = dayOverview(y,m,d);
+      if (day.status === 'worked') stats.worked++;
+      if (!day.isFree && day.status === 'vacation') stats.vacation++;
+      if (!day.isFree && day.status === 'sick') stats.sick++;
+      if (!day.isFree && day.status === 'open') stats.open++;
+    }
+    return stats;
+  }
+  function renderMonthOverview() {
+    const y = state.selectedYear, m = state.selectedMonth;
+    const list = $('monthDayList');
+    if (!list) return;
+    const stats = monthDayStats(y,m);
+    $('workedDaysCount').textContent = stats.worked;
+    $('sickDaysCount').textContent = stats.sick;
+    $('vacDaysMonth').textContent = stats.vacation;
+    $('openWorkDaysCount').textContent = stats.open;
+    const today = new Date();
+    const todayString = dateStr(today.getFullYear(), today.getMonth(), today.getDate());
+    const html = [];
+    for (let d=1; d<=daysInMonth(y,m); d++) {
+      const day = dayOverview(y,m,d);
+      html.push(`<div class="day-row ${day.status}${day.ds === todayString ? ' today' : ''}" title="${escapeHtml(day.label)}">
+        <div class="day-date">
+          <div class="day-number">${d}</div>
+          <div><div class="day-weekday">${fmtWeekday.format(day.date)}</div><div class="day-month">${fmtShortMonth.format(day.date)} ${y}</div></div>
+        </div>
+        <div class="day-status">${day.chip}</div>
+        <div class="day-times">
+          <div class="day-time">Soll<strong>${formatDuration(day.req)}</strong></div>
+          <div class="day-time">Ist<strong>${formatDuration(day.worked)}</strong></div>
+          <div class="day-time">Differenz<strong class="${day.diff>=0?'positive':'negative'}">${day.req || day.worked ? formatDuration(day.diff, true) : '–'}</strong></div>
+        </div>
+      </div>`);
+    }
+    list.innerHTML = html.join('');
   }
 
   function renderVacations() {
@@ -530,7 +527,7 @@
   $('clearAll').onclick = () => { if (confirm('Wirklich alle lokalen Daten löschen?')) { localStorage.removeItem(STORAGE); state = defaultState(); save(); render(); toast('Daten gelöscht'); } };
 
   const today = new Date();
-  $('workDate').value = dateStr(state.selectedYear, state.selectedMonth, 1);
+  $('workDate').value = dateStr(today.getFullYear(), today.getMonth(), today.getDate());
   $('startTime').value = '08:00'; $('endTime').value = '12:00'; $('pauseMinutes').value = '0';
   $('sickStart').value = dateStr(today.getFullYear(), today.getMonth(), today.getDate()); $('sickEnd').value = $('sickStart').value;
   updateEntryMode(); updateTimePreview();
@@ -541,7 +538,7 @@
 
 
 // PWA-Updatefunktion
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.3.0';
 let pendingServiceWorker = null;
 
 async function registerPwaServiceWorker() {
