@@ -1,4 +1,4 @@
-ARBEITSZEITEN-PWA v0.4.0
+ARBEITSZEITEN-PWA v0.4.1
 =========================
 
 Dies ist weiterhin eine normale PWA. Es ist keine native iPhone-App.
@@ -38,6 +38,10 @@ v0.3.1 (11.09.2026): Rechenfehler und Bedienungsdetails korrigiert.
 - Offline-Cache lädt eine zusammengehörige App-Version.
 
 RECHENREGELN
+- Stundenkonto im Reiter Monat: Startsaldo plus alle Monatsdifferenzen seit dem
+  eingestellten Startzeitraum bis einschließlich des ausgewählten Monats.
+  Entspricht dem Zeitkonto der Übersicht; das vollständige Monatssoll zählt mit.
+  Anzeige als Dezimalstunden, Plus grün, Minus rot, Null neutral.
 - Übertrag im Reiter Monat: ausschließlich Ist minus Soll des direkt vorherigen
   Monats, auch Januar/Dezember. Kein kumuliertes Zeitkonto und kein Startsaldo.
 - Monatsstunden immer dezimal: Arbeit, Feiertag, Urlaub, Gesamt. Gesamt enthält
@@ -70,7 +74,7 @@ RECHENREGELN
 
 PRÜFUNG
 Im App-Ordner: node --test tests/*.cjs
-41 Tests für Berechnungen, Eingabeabläufe, Dateiverknüpfungen und Offline-Verhalten.
+44 Tests für Berechnungen, Eingabeabläufe, Dateiverknüpfungen und Offline-Verhalten.
 UI zusätzlich im Browser mit isolierten Beispieldaten geprüft.
 Die Tests enthalten keine echten persönlichen Einträge.
 
@@ -89,3 +93,6 @@ FEIERTAGSQUELLE (geprüft 2026)
 Deutsche Bundesbank, Feiertage in Deutschland 2026, bundesweite Liste und Länderzusätze:
 https://www.bundesbank.de/resource/blob/749314/05f64c15196c20776ae7c22a2739b03c/mL/feiertage-in-deutschland-1-data.pdf
 Künftige Jahre nach denselben Feiertagsregeln, Ostern per gregorianischem Algorithmus.
+
+v0.4.1: Kumuliertes Stundenkonto zusätzlich im Reiter Monat, oberhalb des
+Vormonatsübertrags. Beim Monatswechsel wird der zugehörige Gesamtsaldo angezeigt.

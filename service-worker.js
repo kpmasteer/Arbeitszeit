@@ -1,5 +1,5 @@
 // Release 11.09.2026: Berechnungen, mobile Bedienung und konsistenter Offline-Stand.
-const CACHE_NAME = 'arbeitszeiten-pwa-v0.4.0';
+const CACHE_NAME = 'arbeitszeiten-pwa-v0.4.1';
 const APP_SHELL = [
   './',
   './index.html',

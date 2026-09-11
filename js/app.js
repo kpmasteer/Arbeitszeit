@@ -470,6 +470,11 @@
     const list = $('monthDayList');
     if (!list) return;
     const hours=monthHourBreakdown(y,m), transfer=previousMonthTransfer(y,m);
+    const balance=accountBalanceUntil(y,m);
+    const account=Math.abs(balance)<1e-7 ? 0 : balance;
+    $('monthAccountPeriod').textContent = `Gesamtsaldo bis Ende ${fmtMonth.format(new Date(y,m,1))}`;
+    $('monthAccountHours').textContent = `${account > 0 ? '+' : ''}${minutesToDecimalLabel(account)} h`;
+    $('monthAccountHours').className = 'value ' + (account > 0 ? 'positive' : account < 0 ? 'negative' : '');
     $('previousMonthName').textContent = fmtMonth.format(new Date(y,m-1,1));
     $('previousMonthHours').textContent = `${transfer > 0 ? '+' : ''}${minutesToDecimalLabel(Math.abs(transfer)<1e-7 ? 0 : transfer)} h`;
     $('previousMonthHours').className = 'value ' + (transfer>1e-7 ? 'positive' : transfer < -1e-7 ? 'negative' : '');
@@ -665,7 +670,7 @@
 
 
 // PWA-Updatefunktion
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.4.1';
 let pendingServiceWorker = null;
 
 async function registerPwaServiceWorker() {

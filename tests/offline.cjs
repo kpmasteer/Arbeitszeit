@@ -12,7 +12,7 @@ function worker() {
     URL, Response, Request: class { constructor(url, options) { this.url=url; this.cache=options.cache; } },
     self: { location:{origin:'https://work.test'}, clients:{claim:async()=>{}}, skipWaiting:()=>{}, addEventListener:(name,fn)=>handlers[name]=fn },
     fetch:async()=>{ throw Error('offline'); },
-    caches:{keys:async()=>['unrelated-app-cache','arbeitszeiten-pwa-v0.3.0','arbeitszeiten-pwa-v0.3.1','arbeitszeiten-pwa-v0.4.0'],delete:async key=>deleted.push(key),open:async()=>({
+    caches:{keys:async()=>['unrelated-app-cache','arbeitszeiten-pwa-v0.3.0','arbeitszeiten-pwa-v0.3.1','arbeitszeiten-pwa-v0.4.0','arbeitszeiten-pwa-v0.4.1'],delete:async key=>deleted.push(key),open:async()=>({
       addAll:async files=>{ for (const file of files) { assert.equal(file.cache,'reload'); shell.push(file.url); } }, match:async request=>cache.get(typeof request === 'string' ? request : request.url)
     })}
   });
@@ -28,7 +28,7 @@ test('install caches only existing app files', async()=>{
 test('activation preserves caches belonging to other apps', async()=>{
   const {handlers,deleted} = worker();
   let pending; handlers.activate({waitUntil:p=>pending=p}); await pending;
-  assert.deepEqual(deleted,['arbeitszeiten-pwa-v0.3.0','arbeitszeiten-pwa-v0.3.1']);
+  assert.deepEqual(deleted,['arbeitszeiten-pwa-v0.3.0','arbeitszeiten-pwa-v0.3.1','arbeitszeiten-pwa-v0.4.0']);
 });
 test('offline navigation loads app, missing script never receives HTML', async()=>{
   const {handlers,cache} = worker();

@@ -176,6 +176,11 @@
       <div class="card">
         <h2>Monat im Überblick</h2>
         <p class="muted">Deine Arbeitszeiten, Abwesenheiten und offenen Tage.</p>
+        <div class="metric month-transfer month-account" aria-label="Gesamtes Stundenkonto">
+          <div><div class="label">Stundenkonto</div><div class="row-sub" id="monthAccountPeriod"></div></div>
+          <div class="value" id="monthAccountHours">0,00 h</div>
+          <p class="transfer-note">Startsaldo plus alle Monatsdifferenzen seit dem eingestellten Startzeitraum. Das volle Soll des ausgewählten Monats ist berücksichtigt.</p>
+        </div>
         <div class="metric month-transfer">
           <div><div class="label">Übertrag aus dem Vormonat</div><div class="row-sub" id="previousMonthName"></div></div>
           <div class="value" id="previousMonthHours">0,00 h</div>
@@ -320,7 +325,7 @@
         <h3 style="margin-top:18px">App-Update</h3>
         <div class="soft-note">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div><b>Installierte Version: <span id="appVersion">0.4.0</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
+            <div><b>Installierte Version: <span id="appVersion">0.4.1</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
             <button type="button" id="checkUpdate" class="secondary">Nach Update suchen</button>
           </div>
         </div>

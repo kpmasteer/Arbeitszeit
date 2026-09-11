@@ -6,14 +6,14 @@ const {test} = require('node:test');
 const root=join(__dirname,'..');
 
 // Exercise production event handlers with an isolated in-memory browser model.
-function app() {
+function app(initialState = null) {
   const html=readFileSync(join(root,'index.html'),'utf8');
   const elements=new Map([...html.matchAll(/id="([^"]+)"/g)].map(([,id])=>[id,{
     value:'',textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){}},addEventListener(){}
   }]));
   const weekdays=[1,2,3,4,5].map(value=>({value:String(value),checked:true}));
   for(const [id,value] of Object.entries({workType:'daily',vacStatus:'requested',setCalcMode:'workdays',setDailyTargetMode:'auto',setTimeDisplayMode:'both'})) elements.get(id).value=value;
-  let stored=null,fail=false;
+  let stored=initialState ? JSON.stringify(initialState) : null,fail=false;
   const context=vm.createContext({
     console,Intl,setTimeout:()=>{},navigator:{},window:{addEventListener(){}},confirm:()=>false,
     document:{getElementById:id=>{assert(elements.has(id),id);return elements.get(id)},querySelectorAll:selector=>selector.startsWith('.wd')?weekdays:[]},
@@ -66,3 +66,27 @@ test('month hours always display decimal values independent of app time format',
   t.el('workDate').value='2026-09-11';t.click('addWork');
   assert.equal(t.el('monthWorkHours').textContent,'4,00 h');assert.equal(t.el('monthTotalHours').textContent,'4,00 h');
 });
+test('month account includes opening balance and all months, and follows month navigation',()=>{
+  const t=app({selectedYear:2026,selectedMonth:8,
+    settings:{monthlyHours:40,startBalanceMinutes:300,startBalanceMonth:'2026-07',timeDisplayMode:'decimal'},
+    workEntries:[{type:'monthly',date:'2026-07-01',minutes:2640},{type:'monthly',date:'2026-08-01',minutes:2280},{type:'monthly',date:'2026-09-01',minutes:2460}]
+  });
+  assert.equal(t.el('monthAccountHours').textContent,'+8,00 h');
+  assert.equal(t.el('monthAccountHours').className,'value positive');
+  assert.match(t.el('monthAccountPeriod').textContent,/September 2026/);
+  assert.match(t.el('mAccount').textContent,/\+8,00/);
+  assert.equal(t.el('previousMonthHours').textContent,'-2,00 h');
+  assert.equal(t.el('monthTotalHours').textContent,'41,00 h');
+  t.click('prevMonth');
+  assert.equal(t.el('monthAccountHours').textContent,'+7,00 h');
+  assert.match(t.el('monthAccountPeriod').textContent,/August 2026/);
+  t.click('nextMonth');
+  assert.equal(t.el('monthAccountHours').textContent,'+8,00 h');
+});
+for (const [balance,text,color] of [[-90,'-1,50 h','value negative'],[0,'0,00 h','value ']]) {
+  test(`month account renders ${balance} minutes with the correct sign and color`,()=>{
+    const t=app({selectedYear:2026,selectedMonth:8,settings:{monthlyHours:0,startBalanceMinutes:balance,startBalanceMonth:'2026-09'}});
+    assert.equal(t.el('monthAccountHours').textContent,text);
+    assert.equal(t.el('monthAccountHours').className,color);
+  });
+}
