@@ -27,9 +27,10 @@
         </div>
       </div>
       <div class="month-picker">
-        <button class="secondary small" id="prevMonth">←</button>
+        <button class="secondary small" id="prevMonth" aria-label="Vorheriger Monat">←</button>
         <strong id="monthLabel">Juli 2026</strong>
-        <button class="secondary small" id="nextMonth">→</button>
+        <button class="secondary small" id="nextMonth" aria-label="Nächster Monat">→</button>
+        <button class="secondary small" id="currentMonth" aria-label="Zum aktuellen Monat">Heute</button>
       </div>
     </header>
 
@@ -47,7 +48,7 @@
         <svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19c1-4 3-7 6-9"/><path d="M13 10c-1-3 0-5 3-7 1 3 1 5-1 7"/><path d="M12 10c-3-2-5-2-7 0 2 2 4 3 7 2"/></svg><span>Urlaub</span>
       </button>
       <button class="tab" data-tab="settings" aria-label="Einstellungen">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1A1.7 1.7 0 0 0 9 19.3a1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H3v-4h.1A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.3-1.9L4.3 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V3h4v.1A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg><span>Einstellungen</span>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1A1.7 1.7 0 0 0 9 19.3a1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H3v-4h.1A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.3-1.9L4.3 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V3h4v.1A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg><span>Optionen</span>
       </button>
     </nav>
 
@@ -67,7 +68,7 @@
       </div>
       <div class="grid four" style="margin-top:16px">
         <div class="metric"><div class="label">Monatssoll</div><div class="value" id="mRequired">0:00</div></div>
-        <div class="metric"><div class="label">Geleistet</div><div class="value blue" id="mWorked">0:00</div></div>
+        <div class="metric"><div class="label">Ist inkl. Zeitgutschrift</div><div class="value blue" id="mWorked">0:00</div></div>
         <div class="metric"><div class="label">Tagesbedarf</div><div class="value" id="mDaily">0:00</div></div>
         <div class="metric"><div class="label">Monatsdiff. / Zeitkonto</div><div class="value" id="mDiff">0:00</div><div class="row-sub" id="mAccount">Konto 0:00</div></div>
       </div>
@@ -83,7 +84,7 @@
           <h2>Arbeitszeit erfassen</h2>
           <div class="form-row three">
             <div>
-              <label>Art</label>
+              <label for="workType">Art</label>
               <select id="workType">
                 <option value="daily">Täglich</option>
                 <option value="weekly">Wöchentlich</option>
@@ -91,11 +92,11 @@
               </select>
             </div>
             <div>
-              <label>Datum / Start</label>
+              <label for="workDate">Datum / Start</label>
               <input id="workDate" type="date" />
             </div>
             <div id="hoursField">
-              <label>Stunden</label>
+              <label for="workHours">Stunden</label>
               <input id="workHours" type="text" placeholder="z. B. 4:30 oder 4,5" />
             </div>
           </div>
@@ -103,7 +104,7 @@
           <div id="timeFields" style="display:none; margin-top:12px">
             <div class="form-row three">
               <div>
-                <label>Arbeitsbeginn</label>
+                <label for="startTime">Arbeitsbeginn</label>
                 <input id="startTime" type="time" step="300" />
                 <div class="quick-times" data-time-target="startTime">
                   <button class="time-pill" type="button" data-time="06:00">06:00</button>
@@ -113,7 +114,7 @@
                 </div>
               </div>
               <div>
-                <label>Arbeitsende</label>
+                <label for="endTime">Arbeitsende</label>
                 <input id="endTime" type="time" step="300" />
                 <div class="quick-times" data-time-target="endTime">
                   <button class="time-pill" type="button" data-time="12:00">12:00</button>
@@ -123,7 +124,7 @@
                 </div>
               </div>
               <div>
-                <label>Pause in Minuten</label>
+                <label for="pauseMinutes">Pause in Minuten</label>
                 <input id="pauseMinutes" type="number" min="0" step="5" value="0" />
                 <div class="quick-times" data-time-target="pauseMinutes">
                   <button class="time-pill" type="button" data-pause="0">0</button>
@@ -140,21 +141,21 @@
           </div>
 
           <div style="margin-top:12px">
-            <label>Notiz</label>
+            <label for="workNote">Notiz</label>
             <input id="workNote" type="text" placeholder="optional" />
           </div>
           <div class="actions">
             <button id="addWork">Arbeitszeit speichern</button>
             <button class="secondary" id="fillToday">Heute eintragen</button>
           </div>
-          <p class="muted">Bei täglicher Erfassung nutzt die App Uhrzeiten mit dem nativen Clockpicker des Geräts und zieht die Pause automatisch ab. Wöchentlich und monatlich bleiben als Stunden-Summe möglich.</p>
+          <p class="muted">Die Pause wird automatisch abgezogen. Liegt das Ende vor dem Beginn, zählt die Schicht bis zum nächsten Tag und wird dem Startdatum zugeordnet. Wochen zählen von Montag bis Sonntag; Monatssummen gehören zum Monat des gewählten Datums. Trage nur tatsächlich gearbeitete Stunden ein – Urlaub und Krankheit ergänzt die App.</p>
           <div class="divider"></div>
           <h2>Krankheit erfassen</h2>
           <div class="form-row">
-            <div><label>Krank von</label><input id="sickStart" type="date" /></div>
-            <div><label>Krank bis</label><input id="sickEnd" type="date" /></div>
+            <div><label for="sickStart">Krank von</label><input id="sickStart" type="date" /></div>
+            <div><label for="sickEnd">Krank bis</label><input id="sickEnd" type="date" /></div>
           </div>
-          <div style="margin-top:12px"><label>Notiz</label><input id="sickNote" type="text" placeholder="Notiz" /></div>
+          <div style="margin-top:12px"><label for="sickNote">Notiz</label><input id="sickNote" type="text" placeholder="Notiz" /></div>
           <div class="actions">
             <button id="addSick">Krankheit speichern</button>
             <button class="secondary" id="sickToday">Heute krank</button>
@@ -174,7 +175,21 @@
     <section id="month" class="section">
       <div class="card">
         <h2>Monat im Überblick</h2>
-        <p class="muted">Alle Tage untereinander – auf dem Smartphone gut lesbar, ohne gequetschte Kalenderwochen.</p>
+        <p class="muted">Deine Arbeitszeiten, Abwesenheiten und offenen Tage.</p>
+        <div class="metric month-transfer">
+          <div><div class="label">Übertrag aus dem Vormonat</div><div class="row-sub" id="previousMonthName"></div></div>
+          <div class="value" id="previousMonthHours">0,00 h</div>
+          <p class="transfer-note">Nur die Plus-/Minusstunden dieses Vormonats, ohne ältere Salden.</p>
+        </div>
+        <h3 id="monthHoursTitle">Stunden im aktuellen Monat</h3>
+        <div class="month-hours" aria-label="Monatsstunden in Dezimalstunden">
+          <div class="metric"><div class="label">Arbeitszeit</div><div class="value positive" id="monthWorkHours">0,00 h</div></div>
+          <div class="metric"><div class="label">Feiertag</div><div class="value orange" id="monthHolidayHours">0,00 h</div></div>
+          <div class="metric"><div class="label">Urlaub</div><div class="value warn" id="monthVacationHours">0,00 h</div></div>
+          <div class="metric total-hours"><div class="label">Gesamt</div><div class="value blue" id="monthTotalHours">0,00 h</div></div>
+        </div>
+        <p id="monthSickHours" class="hours-note"></p>
+        <div class="divider"></div>
         <div class="month-stats" aria-label="Kennzahlen des ausgewählten Monats">
           <div class="metric"><div class="label">Tage im Monat</div><div class="value" id="daysCount">0</div></div>
           <div class="metric worked-stat"><div class="label">Tage gearbeitet</div><div class="value positive" id="workedDaysCount">0</div></div>
@@ -182,21 +197,24 @@
           <div class="metric"><div class="label">Urlaubstage</div><div class="value warn" id="vacDaysMonth">0</div></div>
           <div class="metric"><div class="label">Noch zu arbeiten</div><div class="value blue" id="openWorkDaysCount">0</div></div>
         </div>
+        <p id="monthCountNote" class="soft-note"></p>
         <div class="month-detail-head">
           <div>
             <h3>Tagesübersicht</h3>
             <p class="muted">Soll, Ist und Status für jeden Tag</p>
           </div>
           <div class="month-rest">
-            <span>Rest pro offenem Arbeitstag</span>
+            <span>Rest pro offenem Arbeitstag ab heute</span>
             <strong id="remainingDaily">0:00</strong>
           </div>
         </div>
         <div class="day-list" id="monthDayList"></div>
         <div class="legend">
           <span class="chip green">Gearbeitet</span>
+          <span class="chip orange">Feiertag</span>
           <span class="chip yellow">Urlaub</span>
           <span class="chip red">Krank</span>
+          <span class="chip purple">Sonntag</span>
           <span class="chip blue">Frei / offen</span>
         </div>
       </div>
@@ -206,32 +224,34 @@
       <div class="grid two">
         <div class="card">
           <h2>Urlaub erfassen</h2>
+          <p class="muted">Sonntage, Feiertage und freie Tage werden automatisch ausgelassen – auch bei längeren Urlaubszeiträumen.</p>
           <div>
-            <label>Titel</label>
+            <label for="vacTitle">Titel</label>
             <input id="vacTitle" type="text" placeholder="Urlaubstitel" />
           </div>
           <div class="form-row" style="margin-top:12px">
-            <div><label>Von</label><input id="vacStart" type="date" /></div>
-            <div><label>Bis</label><input id="vacEnd" type="date" /></div>
+            <div><label for="vacStart">Von</label><input id="vacStart" type="date" /></div>
+            <div><label for="vacEnd">Bis</label><input id="vacEnd" type="date" /></div>
           </div>
           <div class="form-row" style="margin-top:12px">
             <div>
-              <label>Status</label>
+              <label for="vacStatus">Status</label>
               <select id="vacStatus"><option value="requested">Beantragt</option><option value="approved">Genehmigt</option></select>
             </div>
             <div>
-              <label>Urlaubstage <span class="muted">nach Arbeitstage-Regel</span></label>
-              <input id="vacDays" type="number" min="0" step="0.5" placeholder="automatisch" />
+              <label for="vacDays">Urlaubstage <span class="muted">nach Arbeitstage-Regel</span></label>
+              <input id="vacDays" type="number" min="0" step="1" readonly placeholder="automatisch" />
             </div>
           </div>
-          <div style="margin-top:12px"><label>Notiz</label><input id="vacNote" type="text" placeholder="optional" /></div>
+          <div style="margin-top:12px"><label for="vacNote">Notiz</label><input id="vacNote" type="text" placeholder="optional" /></div>
           <div class="actions">
             <button id="addVacation">Urlaub speichern</button>
             <button class="secondary" id="calcVacDays">Tage berechnen</button>
           </div>
         </div>
         <div class="card">
-          <h2>Urlaubsübersicht</h2>
+          <h2>Urlaubsübersicht <span id="vacationYear"></span></h2>
+          <p class="muted">Genehmigte Arbeitstage im ausgewählten Jahr. Überschneidungen zählen einmal; Krankheit hat Vorrang. Alle gespeicherten Urlaubszeiträume stehen darunter.</p>
           <div class="grid three" style="margin-bottom:14px">
             <div class="metric"><div class="label">Jahresurlaub</div><div class="value" id="yearVac">0</div></div>
             <div class="metric"><div class="label">Genehmigt</div><div class="value positive" id="approvedVac">0</div></div>
@@ -246,14 +266,14 @@
       <div class="card">
         <h2>Einstellungen</h2>
         <div class="form-row three">
-          <div><label>Monatsstunden</label><input id="setMonthlyHours" type="number" min="0" step="0.25" /></div>
-          <div><label>Berechnung</label><select id="setCalcMode"><option value="calendar">Kalendertage</option><option value="workdays">Arbeitstage</option></select></div>
-          <div><label>Jahresurlaub</label><input id="setYearVacation" type="number" min="0" step="0.5" /></div>
+          <div><label for="setMonthlyHours">Monatsstunden</label><input id="setMonthlyHours" type="number" min="0" step="0.25" /></div>
+          <div><label for="setCalcMode">Berechnung</label><select id="setCalcMode"><option value="calendar">Montag bis Samstag</option><option value="workdays">Eingestellte Arbeitstage</option></select></div>
+          <div><label for="setYearVacation">Jahresurlaub</label><input id="setYearVacation" type="number" min="0" step="0.5" /></div>
         </div>
         <h3 style="margin-top:18px">Zeitanzeige</h3>
         <div class="form-row">
           <div>
-            <label>Anzeigeformat für Zeiten</label>
+            <label for="setTimeDisplayMode">Anzeigeformat für Zeiten</label>
             <select id="setTimeDisplayMode">
               <option value="hours">Stunden und Minuten (z. B. 9:17)</option>
               <option value="decimal">Dezimalstunden (z. B. 9,28 h)</option>
@@ -266,24 +286,24 @@
         <h3 style="margin-top:18px">Berechnung · Tagessoll</h3>
         <div class="form-row">
           <div>
-            <label>Tagessoll-Modus</label>
+            <label for="setDailyTargetMode">Tagessoll-Modus</label>
             <select id="setDailyTargetMode">
               <option value="auto">Automatisch aus Monatsstunden berechnen</option>
               <option value="fixed">Abweichender Tagessoll</option>
             </select>
           </div>
           <div>
-            <label>Abweichender Tagessoll</label>
+            <label for="setFixedDailyTarget">Abweichender Tagessoll</label>
             <input id="setFixedDailyTarget" type="text" inputmode="decimal" placeholder="Dezimalstunden" />
           </div>
         </div>
         <p class="muted">Wenn „Abweichender Tagessoll“ aktiv ist, rechnet die App intern mit diesem festen Tageswert als <b>Dezimalstunden</b>. Beispiel: 2,32 = 2,32 Stunden. Angezeigt wird die Arbeitszeit weiterhin als Stunden:Minuten, also ca. 2:19 Std. Krankheit und Urlaub werden ebenfalls mit diesem Wert als Sollzeit gutgeschrieben.</p><p id="fixedDailyPreview" class="soft-note"></p>
         <h3 style="margin-top:18px">Startsaldo Zeitkonto</h3>
         <div class="form-row">
-          <div><label>Start Überstunden/Minus</label><input id="setStartBalance" type="text" placeholder="+0:00 oder -0:00" /></div>
-          <div><label>Startzeitraum ab Monat</label><input id="setStartBalanceMonth" type="month" /></div>
+          <div><label for="setStartBalance">Start Überstunden/Minus</label><input id="setStartBalance" type="text" placeholder="+0:00 oder -0:00" /></div>
+          <div><label for="setStartBalanceMonth">Startzeitraum ab Monat</label><input id="setStartBalanceMonth" type="month" /></div>
         </div>
-        <p class="muted">Der Startsaldo wird als Anfangswert für das Zeitkonto verwendet. Ab dem Startzeitraum werden Monatsdifferenzen darauf gerechnet.</p>
+        <p class="muted">Der Startsaldo wird als Anfangswert für das Zeitkonto verwendet. Ab dem Startzeitraum werden Monatsdifferenzen darauf gerechnet. Das Konto zeigt den Stand einschließlich des gesamten ausgewählten Monats. Änderungen an Stunden und Arbeitstagen gelten auch für frühere Monate.</p>
         <h3 style="margin-top:18px">Arbeitstage</h3>
         <div class="form-row three">
           <label><input type="checkbox" class="wd" value="1" style="width:auto"> Montag</label>
@@ -292,27 +312,29 @@
           <label><input type="checkbox" class="wd" value="4" style="width:auto"> Donnerstag</label>
           <label><input type="checkbox" class="wd" value="5" style="width:auto"> Freitag</label>
           <label><input type="checkbox" class="wd" value="6" style="width:auto"> Samstag</label>
-          <label><input type="checkbox" class="wd" value="0" style="width:auto"> Sonntag</label>
         </div>
+        <p class="soft-note">Sonntage sind grundsätzlich frei und haben kein Tagessoll. Arbeit an einem verkaufsoffenen Sonntag bitte als täglichen Eintrag erfassen.</p>
+        <h3>Feiertage · Niedersachsen</h3>
+        <p class="muted">Die gesetzlichen Feiertage in Niedersachsen werden automatisch berechnet. An deinen eingestellten Arbeitstagen wird das Tagessoll gutgeschrieben; Sonntage bleiben frei. Feiertage verbrauchen keine Urlaubstage und werden nicht doppelt mit Krankheit oder Urlaub angerechnet.</p>
 
         <h3 style="margin-top:18px">App-Update</h3>
         <div class="soft-note">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div><b>Installierte Version: <span id="appVersion">0.3.0</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
+            <div><b>Installierte Version: <span id="appVersion">0.4.0</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
             <button type="button" id="checkUpdate" class="secondary">Nach Update suchen</button>
           </div>
         </div>
         <div class="actions">
           <button id="saveSettings">Einstellungen speichern</button>
-          <button class="secondary" id="resetDemo">Auf leeren Startzustand zurücksetzen</button>
+          <button class="secondary" id="exportData">Datensicherung herunterladen</button>
           <button class="danger" id="clearAll">Alle Daten löschen</button>
         </div>
-        <p class="muted">Alle Daten werden lokal im Browser gespeichert. Dieser Prototyp funktioniert ohne Server.</p>
+        <p class="muted">Alle Daten bleiben auf diesem Gerät. Lade regelmäßig eine Datensicherung herunter, besonders vor einem Gerätewechsel.</p>
       </div>
     </section>
   </div>
 
-  <div class="toast" id="toast">Gespeichert</div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./js/app.js" defer></script>
 </body>
 </html>
