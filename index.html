@@ -256,10 +256,10 @@
         </div>
         <div class="card">
           <h2>Urlaubsübersicht <span id="vacationYear"></span></h2>
-          <p class="muted">Genehmigte Arbeitstage im ausgewählten Jahr. Überschneidungen zählen einmal; Krankheit hat Vorrang. Alle gespeicherten Urlaubszeiträume stehen darunter.</p>
+          <p class="muted">Beantragter und genehmigter Urlaub wird sofort angerechnet – auch für zukünftige Tage. Die Stunden zählen im jeweiligen Urlaubsmonat. Überschneidungen zählen einmal; Krankheit hat Vorrang.</p>
           <div class="grid three" style="margin-bottom:14px">
             <div class="metric"><div class="label">Jahresurlaub</div><div class="value" id="yearVac">0</div></div>
-            <div class="metric"><div class="label">Genehmigt</div><div class="value positive" id="approvedVac">0</div></div>
+            <div class="metric"><div class="label">Angerechnet</div><div class="value positive" id="countedVac">0</div></div>
             <div class="metric"><div class="label">Resturlaub</div><div class="value" id="remainingVac">0</div></div>
           </div>
           <div class="list" id="vacationList"></div>
@@ -325,7 +325,7 @@
         <h3 style="margin-top:18px">App-Update</h3>
         <div class="soft-note">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div><b>Installierte Version: <span id="appVersion">0.4.1</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
+            <div><b>Installierte Version: <span id="appVersion">0.4.2</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
             <button type="button" id="checkUpdate" class="secondary">Nach Update suchen</button>
           </div>
         </div>

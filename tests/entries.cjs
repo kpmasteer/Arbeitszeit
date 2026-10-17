@@ -43,6 +43,20 @@ test('reversed vacation dates are saved normalized',()=>{
   const t=app();t.el('vacStart').value='2026-09-18';t.el('vacEnd').value='2026-09-14';t.click('addVacation');
   const entry=t.read().vacations[0]; assert.equal(entry.start,'2026-09-14');assert.equal(entry.end,'2026-09-18');assert.equal(entry.days,5);
 });
+test('saving requested future vacation immediately updates hours, account, days and remaining vacation',()=>{
+  const t=app({selectedYear:2027,selectedMonth:0,settings:{dailyTargetMode:'fixed',fixedDailyTargetHours:4,yearVacation:30,startBalanceMonth:'2027-01'}});
+  t.el('vacStart').value='2027-01-04';t.el('vacEnd').value='2027-01-05';
+  const oldAccount=t.el('monthAccountHours').textContent;
+  t.click('addVacation');
+  assert.equal(t.read().vacations[0].status,'requested');
+  assert.equal(t.el('monthVacationHours').textContent,'8,00 h');
+  assert.equal(t.el('countedVac').textContent,2);
+  assert.equal(t.el('remainingVac').textContent,28);
+  assert.equal(t.el('vacDaysMonth').textContent,2);
+  assert.notEqual(t.el('monthAccountHours').textContent,oldAccount);
+  assert.match(t.el('vacationList').innerHTML,/Beantragt: Sollzeit und Urlaubstage sind bereits angerechnet/);
+  assert.doesNotMatch(t.el('toast').textContent,/keine Zeitgutschrift/);
+});
 test('today button preserves entered clock times and break',()=>{
   const t=app();t.el('startTime').value='06:30';t.el('endTime').value='15:45';t.el('pauseMinutes').value='45';t.click('fillToday');
   assert.equal(t.el('startTime').value,'06:30');assert.equal(t.el('endTime').value,'15:45');assert.equal(t.el('pauseMinutes').value,'45');

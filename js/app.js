@@ -232,7 +232,7 @@
     if (!isWorkday(date)) return 0;
     if (holidayOnDate(dateString)) return req;
     if (sickOnDate(dateString)) return req;
-    if (vacationOnDate(dateString)?.status === 'approved') return req;
+    if (vacationOnDate(dateString)) return req;
     return 0;
   }
   function entryRange(entry) {
@@ -251,7 +251,7 @@
     }
     // Aggregate entries contain actual work. Allocate it to available days so
     // full-day absence credits do not swallow part of the entered work total.
-    const available = candidates.filter(ds => !holidayOnDate(ds) && !(isWorkday(toDate(ds)) && (sickOnDate(ds) || vacationOnDate(ds)?.status === 'approved')));
+    const available = candidates.filter(ds => !holidayOnDate(ds) && !(isWorkday(toDate(ds)) && (sickOnDate(ds) || vacationOnDate(ds))));
     const dates = available.length ? available : candidates;
     const index = dates.indexOf(dateString);
     if (index < 0) return 0;
@@ -275,7 +275,7 @@
       totals.work += work;
       if (holidayOnDate(ds)) totals.holiday += credit;
       else if (sickOnDate(ds)) totals.sick += credit;
-      else if (vacationOnDate(ds)?.status === 'approved') totals.vacation += credit;
+      else if (vacationOnDate(ds)) totals.vacation += credit;
     }
     totals.total=totals.work+totals.holiday+totals.vacation+totals.sick;
     return totals;
@@ -379,7 +379,7 @@
       const dt = new Date(y,m,d);
       if (!isWorkday(dt)) continue;
       const ds = dateStr(y,m,d);
-      if (type === 'vacation' && vacationOnDate(ds)?.status === 'approved' && !sickOnDate(ds)) count++;
+      if (type === 'vacation' && vacationOnDate(ds) && !sickOnDate(ds)) count++;
       if (type === 'sick' && sickOnDate(ds) && !holidayOnDate(ds)) count++;
     }
     return count;
@@ -438,9 +438,10 @@
       status = 'worked'; label = 'Gearbeitet'; chip = '<span class="chip green">Gearbeitet</span>';
     }
     if (vac && !isFree) {
-      if (vac.status === 'approved') {
-        status = 'vacation'; label = 'Urlaub genehmigt'; chip = '<span class="chip yellow">Urlaub</span>';
-      } else { chip += '<span class="chip yellow">Beantragt</span>'; label += ' · Urlaub beantragt'; }
+      status = 'vacation';
+      label = vac.status === 'approved' ? 'Urlaub genehmigt' : 'Urlaub beantragt';
+      chip = '<span class="chip yellow">Urlaub</span>';
+      if (vac.status !== 'approved') chip += '<span class="chip yellow">Beantragt</span>';
     }
     if (sick && !isFree) { status = 'sick'; label = 'Krank'; chip = '<span class="chip red">Krank</span>'; }
     if (holiday && !sunday) { status = 'holiday'; label = holiday; chip = '<span class="chip orange">Feiertag</span>'; }
@@ -457,9 +458,9 @@
     for (let d=1; d<=daysInMonth(y,m); d++) {
       const day = dayOverview(y,m,d);
       if (day.status === 'worked') stats.worked++;
-      if (!day.isFree && vacationOnDate(day.ds)?.status === 'approved' && !sickOnDate(day.ds)) stats.vacation++;
+      if (!day.isFree && vacationOnDate(day.ds) && !sickOnDate(day.ds)) stats.vacation++;
       if (!day.isFree && sickOnDate(day.ds) && !day.holiday) stats.sick++;
-      const unfinished = !day.isFree && !day.holiday && !sickOnDate(day.ds) && vacationOnDate(day.ds)?.status !== 'approved' && (day.worked < day.req || (day.req === 0 && day.worked === 0));
+      const unfinished = !day.isFree && !day.holiday && !sickOnDate(day.ds) && !vacationOnDate(day.ds) && (day.worked < day.req || (day.req === 0 && day.worked === 0));
       if (unfinished && day.date >= today) stats.open++;
       if (unfinished && day.date < today) stats.missing++;
     }
@@ -516,11 +517,11 @@
     return total;
   }
   function renderVacations() {
-    const approved = annualVacationDays(state.selectedYear);
+    const counted = annualVacationDays(state.selectedYear);
     $('vacationYear').textContent = state.selectedYear;
     $('yearVac').textContent = state.settings.yearVacation;
-    $('approvedVac').textContent = approved;
-    $('remainingVac').textContent = Math.max(0, state.settings.yearVacation - approved);
+    $('countedVac').textContent = counted;
+    $('remainingVac').textContent = Math.max(0, state.settings.yearVacation - counted);
     const future = state.vacations.slice().sort((a,b)=>toDate(a.start)-toDate(b.start));
     const next = future.find(v => toDate(v.end) >= new Date(new Date().toDateString()));
     $('nextVacationBox').innerHTML = next ? `<div class="row"><div><div class="row-title">${escapeHtml(next.title)}</div><div class="row-sub">${fmtDay.format(toDate(next.start))} – ${fmtDay.format(toDate(next.end))} · ${vacationDaysBetween(next.start,next.end)} Urlaubstage nach Arbeitstage-Regel</div></div><span class="chip ${next.status==='approved'?'green':'yellow'}">${next.status==='approved'?'Genehmigt':'Beantragt'}</span></div>` : '<div class="empty">Kein kommender Urlaub eingetragen.</div>';
@@ -528,7 +529,7 @@
     $('vacationList').innerHTML = future.map(v => {
       const calcDays = vacationDaysBetween(v.start, v.end);
       const storedHint = Number(v.days||0) !== calcDays ? `<br><span class="muted">Hinweis: gespeichert war ${v.days} Tage, aktuell nach Arbeitstage-Regel ${calcDays} Tage.</span>` : '';
-      return `<div class="row"><div><div class="row-title">${escapeHtml(v.title)} · ${calcDays} Tage</div><div class="row-sub">${fmtDay.format(toDate(v.start))} – ${fmtDay.format(toDate(v.end))}${v.note ? ' · '+escapeHtml(v.note):''}<br>${v.status === 'approved' ? 'Genehmigt: Sollzeit wird an Arbeitstagen angerechnet.' : 'Beantragt: noch keine Zeitgutschrift.'}${storedHint}</div></div><div class="entry-actions">${v.status === 'requested' ? `<button class="secondary small" data-approve-vac="${v.id}">Genehmigen</button>` : '<span class="chip green">Genehmigt</span>'}<button class="danger small" aria-label="Urlaub löschen" data-del-vac="${v.id}">×</button></div></div>`;
+      return `<div class="row"><div><div class="row-title">${escapeHtml(v.title)} · ${calcDays} Tage</div><div class="row-sub">${fmtDay.format(toDate(v.start))} – ${fmtDay.format(toDate(v.end))}${v.note ? ' · '+escapeHtml(v.note):''}<br>${v.status === 'approved' ? 'Genehmigt' : 'Beantragt'}: Sollzeit und Urlaubstage sind bereits angerechnet.${storedHint}</div></div><div class="entry-actions">${v.status === 'requested' ? `<button class="secondary small" data-approve-vac="${v.id}">Genehmigen</button>` : '<span class="chip green">Genehmigt</span>'}<button class="danger small" aria-label="Urlaub löschen" data-del-vac="${v.id}">×</button></div></div>`;
     }).join('');
     document.querySelectorAll('[data-del-vac]').forEach(btn => btn.onclick = () => { state.vacations = state.vacations.filter(v => v.id !== btn.dataset.delVac); save(); render(); });
     document.querySelectorAll('[data-approve-vac]').forEach(btn => btn.onclick = () => { state.vacations.find(v => v.id === btn.dataset.approveVac).status = 'approved'; save(); render(); });
@@ -625,7 +626,7 @@
     state.vacations.push({ id: uid(), title, start, end, days, status: $('vacStatus').value, note: $('vacNote').value.trim() });
     if (!save()) return;
     $('vacTitle').value = ''; $('vacStart').value = ''; $('vacEnd').value = ''; $('vacDays').value = ''; $('vacNote').value = '';
-    render(); toast($('vacStatus').value === 'approved' ? 'Urlaub gespeichert: Sollzeit angerechnet.' : 'Urlaubsantrag gespeichert: noch keine Zeitgutschrift.');
+    render(); toast('Urlaub gespeichert: Sollzeit und Urlaubstage angerechnet.');
   };
   $('saveSettings').onclick = () => {
     const wds = [...document.querySelectorAll('.wd:checked')].map(cb => Number(cb.value));
@@ -670,7 +671,7 @@
 
 
 // PWA-Updatefunktion
-const APP_VERSION = '0.4.1';
+const APP_VERSION = '0.4.2';
 let pendingServiceWorker = null;
 
 async function registerPwaServiceWorker() {

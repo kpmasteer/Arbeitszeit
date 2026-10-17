@@ -84,11 +84,14 @@ test('hour parsing accepts comma and HH:MM, rejects impossible minutes', () => {
   near(api.parseHours('-2:15'), -135);
   for (const value of ['4:99', '1:2:3', 'Infinity', 'abc']) assert(!Number.isFinite(api.parseHours(value)));
 });
-test('only approved vacation credits time; sickness takes precedence', () => {
+test('requested and approved vacation both credit time; sickness takes precedence', () => {
   const { api, state } = app({ dailyTargetMode:'fixed', fixedDailyTargetHours:4 });
   state.vacations = [{ start:'2026-09-07', end:'2026-09-08', status:'requested' }];
-  near(api.workedOnDate('2026-09-07'), 0);
+  near(api.workedOnDate('2026-09-07'), 240);
+  assert.equal(api.countMonthMarkedDays(2026,8,'vacation'), 2);
+  const requestedTotal = api.monthWorked(2026,8);
   state.vacations[0].status = 'approved';
+  near(api.monthWorked(2026,8), requestedTotal);
   state.sickDays = [{ start:'2026-09-07', end:'2026-09-07' }];
   near(api.workedOnDate('2026-09-07'), 240);
   assert.equal(api.countMonthMarkedDays(2026,8,'vacation'), 1);
@@ -116,15 +119,36 @@ test('annual vacation is year-specific and counts overlapping ranges once', () =
     {start:'2026-12-31',end:'2026-12-31',status:'approved'},
     {start:'2026-09-07',end:'2026-09-07',status:'requested'}
   ];
-  assert.equal(api.annualVacationDays(2026),1);
+  assert.equal(api.annualVacationDays(2026),2);
   assert.equal(api.annualVacationDays(2027),1); // Neujahr kostet keinen Urlaubstag.
 });
 test('vacation and sickness day counts do not depend on configured hours', () => {
   const { api, state } = app({monthlyHours:0});
-  state.vacations = [{start:'2026-09-07',end:'2026-09-07',status:'approved'}];
+  state.vacations = [{start:'2026-09-07',end:'2026-09-07',status:'requested'}];
   state.sickDays = [{start:'2026-09-08',end:'2026-09-08'}];
   const stats = api.monthDayStats(2026,8);
   assert.equal(stats.vacation,1); assert.equal(stats.sick,1);
+  assert.equal(stats.open + stats.missing,20); // 22 workdays, minus vacation and sickness, independent of today's date.
+});
+
+test('requested vacation excludes holidays and Sundays and overlapping approvals count once',()=>{
+  const {api,state}=app({dailyTargetMode:'fixed',fixedDailyTargetHours:4});
+  state.vacations=[{start:'2026-04-03',end:'2026-04-08',status:'requested'},
+    {start:'2026-04-07',end:'2026-04-07',status:'approved'}];
+  assert.equal(api.annualVacationDays(2026),2);
+  near(api.monthHourBreakdown(2026,3).vacation,480);
+  near(api.monthHourBreakdown(2026,3).holiday,480);
+  near(api.workedOnDate('2026-04-05'),0);
+  assert.equal(api.dayOverview(2026,3,8).status,'vacation');
+  assert.match(api.dayOverview(2026,3,8).chip,/Beantragt/);
+});
+test('weekly work is distributed around requested vacation without losing actual work',()=>{
+  const {api,state}=app({dailyTargetMode:'fixed',fixedDailyTargetHours:8});
+  state.workEntries=[{type:'weekly',date:'2026-09-07',minutes:2400}];
+  state.vacations=[{start:'2026-09-08',end:'2026-09-08',status:'requested'}];
+  near(api.manualWorkOnDate('2026-09-08'),0);
+  near(api.monthWorked(2026,8),2880);
+  near(api.monthHourBreakdown(2026,8).vacation,480);
 });
 test('time account adds exact differences and opening balance across months', () => {
   const { api, state } = app({monthlyHours:40,startBalanceMinutes:90,startBalanceMonth:'2026-08'});

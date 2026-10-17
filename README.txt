@@ -1,4 +1,4 @@
-ARBEITSZEITEN-PWA v0.4.1
+ARBEITSZEITEN-PWA v0.4.2
 =========================
 
 Dies ist weiterhin eine normale PWA. Es ist keine native iPhone-App.
@@ -30,7 +30,7 @@ v0.3.0: Heutiges Datum beim Erfassen vorausgewählt. Monat und Kalender zu einer
 v0.3.1 (11.09.2026): Rechenfehler und Bedienungsdetails korrigiert.
 - Wochen-/Monatssummen werden ohne Minutenverlust auf passende Tage verteilt.
 - Wochen über Monats-/Jahresgrenzen werden einmalig aufgeteilt.
-- Urlaub wird erst nach Genehmigung gutgeschrieben. Krankheit hat Vorrang.
+- Damals: Urlaub erst nach Genehmigung gutgeschrieben (ab v0.4.2 bereits bei Beantragung). Krankheit hat Vorrang.
 - Jahresurlaub zählt nur das ausgewählte Jahr; Überschneidungen zählen einmal.
 - Resttage zählen ab heute; frühere unvollständige Tage sind separat ausgewiesen.
 - Eingabeprüfung, Duplikatschutz, Heute-Sprung, Datensicherung als JSON.
@@ -58,11 +58,16 @@ RECHENREGELN
 - Tageseinträge: Beginn bis Ende minus Pause. Nachtschichten gehören zum Startdatum.
 - Wochen: Montag bis Sonntag; Monatssummen: Monat des gewählten Eingabedatums.
 - Summen werden auf Berechnungstage verteilt, nach Möglichkeit ohne Feiertage und
-  genehmigten Urlaub/Krankheit. Sind alle Tage abwesend, bleiben die Berechnungstage als
+  beantragten oder genehmigten Urlaub/Krankheit. Sind alle Tage abwesend, bleiben die Berechnungstage als
   Verteilungsbasis erhalten; solche widersprüchlichen Einträge bitte prüfen.
 - Tägliche Arbeit und Abwesenheit am selben Tag: Anrechnung mindestens Tagessoll,
   aber keine doppelte Vollgutschrift zusätzlich zur bereits gebuchten Arbeitszeit.
-- Beantragter Urlaub bringt noch keine Zeitgutschrift. „Genehmigen“ im Reiter Urlaub.
+- Jeder eingetragene Urlaub wird sofort angerechnet, auch mit Status „Beantragt“
+  und für zukünftige Tage: Tagessoll im jeweiligen Urlaubsmonat und Abzug vom
+  Resturlaub des jeweiligen Jahres. Der Status bleibt sichtbar, beeinflusst die
+  Berechnung aber nicht. Spätere Genehmigung erzeugt keine zweite Gutschrift.
+- Dies gilt auch für bereits gespeicherte Anträge. Löschen eines Urlaubs entfernt
+  dessen Anrechnung, soweit kein anderer Urlaubszeitraum denselben Tag abdeckt.
 - Urlaub/Krankheit zählen nur an eingestellten Arbeitstagen, auch ohne Stundensoll.
 - Bei Wochen-/Monatssummen sind gearbeitete Tage rechnerisch verteilt, nicht exakt
   aus einzelnen Anwesenheitsdaten bekannt.
@@ -74,7 +79,7 @@ RECHENREGELN
 
 PRÜFUNG
 Im App-Ordner: node --test tests/*.cjs
-44 Tests für Berechnungen, Eingabeabläufe, Dateiverknüpfungen und Offline-Verhalten.
+47 Tests für Berechnungen, Eingabeabläufe, Dateiverknüpfungen und Offline-Verhalten.
 UI zusätzlich im Browser mit isolierten Beispieldaten geprüft.
 Die Tests enthalten keine echten persönlichen Einträge.
 
@@ -96,3 +101,7 @@ Künftige Jahre nach denselben Feiertagsregeln, Ostern per gregorianischem Algor
 
 v0.4.1: Kumuliertes Stundenkonto zusätzlich im Reiter Monat, oberhalb des
 Vormonatsübertrags. Beim Monatswechsel wird der zugehörige Gesamtsaldo angezeigt.
+
+v0.4.2: Beantragter Urlaub wird wie genehmigter Urlaub sofort angerechnet.
+Monatsstunden, Stundenkonto, Resturlaub, Tageszähler und Kalender sind einheitlich.
+Die Statusanzeige und die Möglichkeit zur Genehmigung bleiben erhalten.
