@@ -5,6 +5,7 @@
   const fmtWeekday = new Intl.DateTimeFormat('de-DE', { weekday: 'short' });
   const fmtShortMonth = new Intl.DateTimeFormat('de-DE', { month: 'short' });
   const holidayCache = new Map();
+  const TIME_ACCOUNT_LIMIT_MINUTES = 20 * 60;
 
   // Gesetzliche Feiertage Niedersachsen (§ 2 NFeiertagsG); offline berechnet.
   function holidaysForYear(year) {
@@ -302,19 +303,30 @@
     return total;
   }
   function monthDiff(y,m) { return monthWorked(y,m) - monthRequired(y,m); }
-  function accountBalanceUntil(y,m) {
+  function splitOvertime(minutes) {
+    // Keep fractional target minutes until display; avoid floating-point residue at the limit.
+    const total = Math.abs(minutes) < 1e-7 ? 0 : Math.abs(minutes - TIME_ACCOUNT_LIMIT_MINUTES) < 1e-7 ? TIME_ACCOUNT_LIMIT_MINUTES : minutes;
+    const payout = Math.max(0, total - TIME_ACCOUNT_LIMIT_MINUTES);
+    return { total, account: total - payout, payout };
+  }
+  function overtimeBalanceUntil(y,m) {
     const start = state.settings.startBalanceMonth || monthKey(y,m);
     let [sy, sm] = start.split('-').map(Number); sm -= 1;
-    let total = Number(state.settings.startBalanceMinutes || 0);
+    let carry = Number(state.settings.startBalanceMinutes || 0);
+    let balance = splitOvertime(carry), paidBefore = 0;
     const cur = new Date(sy, sm, 1);
     const end = new Date(y, m, 1);
     while (cur <= end) {
-      total += monthDiff(cur.getFullYear(), cur.getMonth());
+      balance = splitOvertime(carry + monthDiff(cur.getFullYear(), cur.getMonth()));
+      carry = balance.account;
+      // Only the retained account carries forward. Earlier payout portions must not recur.
+      if (cur < end) paidBefore += balance.payout;
       cur.setMonth(cur.getMonth()+1);
       if (cur.getFullYear() > y+3) break;
     }
-    return total;
+    return { ...balance, paidBefore };
   }
+  function accountBalanceUntil(y,m) { return overtimeBalanceUntil(y,m).total; }
   function vacationDaysBetween(start, end, excludeHolidays = true) {
     if (!start || !end) return 0;
     let s = toDate(start), e = toDate(end), count = 0;
@@ -336,7 +348,8 @@
     const remainingCalcDays = monthDayStats(y,m).open;
     const remaining = Math.max(0, required - worked);
     const normalDaily = state.settings.dailyTargetMode === 'fixed' ? decimalHoursToMinutes(state.settings.fixedDailyTargetHours) : Math.round(state.settings.monthlyHours * 60 / calcDays(y,m));
-    return { required, worked, diff, remaining, account: accountBalanceUntil(y,m), daily: normalDaily, remainingDaily: remainingCalcDays ? Math.round(remaining / remainingCalcDays) : null };
+    const overtime = overtimeBalanceUntil(y,m);
+    return { required, worked, diff, remaining, account: overtime.account, overtime, daily: normalDaily, remainingDaily: remainingCalcDays ? Math.round(remaining / remainingCalcDays) : null };
   }
   function toast(msg='Gespeichert') {
     if (storageError) msg = 'Speichern fehlgeschlagen. Bitte Gerätespeicher und Browser-Einstellungen prüfen.';
@@ -356,6 +369,7 @@
     $('mDiff').className = 'value ' + (s.diff >= 0 ? 'positive' : 'negative');
     $('mAccount').textContent = `Zeitkonto: ${formatDuration(s.account, true)}`;
     $('mAccount').className = 'row-sub ' + (s.account >= 0 ? 'positive' : 'negative');
+    renderOvertime('dashboard', s.overtime);
     $('dashRemaining').textContent = s.diff >= 0
       ? formatDuration(s.diff, true)
       : formatDuration(s.remaining);
@@ -390,7 +404,7 @@
       ['Automatisch angerechnet', `${countMonthMarkedDays(state.selectedYear,state.selectedMonth,'vacation')} Urlaubstage · ${countMonthMarkedDays(state.selectedYear,state.selectedMonth,'sick')} Krankheitstage`],
       ['Tagessoll-Modus', state.settings.dailyTargetMode === 'fixed' ? `Abweichender Tagessoll: ${decimalHoursLabel(state.settings.fixedDailyTargetHours)} Dezimalstunden · Anzeige ${formatDuration(decimalHoursToMinutes(state.settings.fixedDailyTargetHours))}` : 'Automatisch aus Monatsstunden'],
       ['Startsaldo', `${formatDuration(state.settings.startBalanceMinutes, true)} ab ${state.settings.startBalanceMonth}`],
-      ['Zeitkonto bis Monatsende', `${formatDuration(s.account, true)}`],
+      ['Zeitkonto bis Monatsende (ohne Auszahlungsanteil)', `${formatDuration(s.account, true)}`],
     ];
     $('quickList').innerHTML = items.map(([a,b]) => `<div class="row"><div><div class="row-title">${a}</div><div class="row-sub">${b}</div></div><span class="chip blue">Info</span></div>`).join('');
   }
@@ -466,16 +480,23 @@
     }
     return stats;
   }
+  function renderOvertime(view, balance) {
+    const ids = view === 'dashboard'
+      ? ['overtimeTotal', 'overtimeAccount', 'overtimePayout', 'overtimePeriod']
+      : ['monthOvertimeTotal', 'monthAccountHours', 'monthPayoutHours', 'monthAccountPeriod'];
+    for (const [index, key] of ['total', 'account', 'payout'].entries()) {
+      const value = balance[key];
+      $(ids[index]).textContent = formatDuration(value, key !== 'payout');
+      $(ids[index]).className = 'value ' + (value < 0 ? 'negative' : value > 0 ? (key === 'payout' ? 'blue' : 'positive') : '');
+    }
+    $(ids[3]).textContent = `Stand bis Ende ${fmtMonth.format(new Date(state.selectedYear,state.selectedMonth,1))} · inklusive Überträgen und vollem Monatssoll`;
+  }
   function renderMonthOverview() {
     const y = state.selectedYear, m = state.selectedMonth;
     const list = $('monthDayList');
     if (!list) return;
     const hours=monthHourBreakdown(y,m), transfer=previousMonthTransfer(y,m);
-    const balance=accountBalanceUntil(y,m);
-    const account=Math.abs(balance)<1e-7 ? 0 : balance;
-    $('monthAccountPeriod').textContent = `Gesamtsaldo bis Ende ${fmtMonth.format(new Date(y,m,1))}`;
-    $('monthAccountHours').textContent = `${account > 0 ? '+' : ''}${minutesToDecimalLabel(account)} h`;
-    $('monthAccountHours').className = 'value ' + (account > 0 ? 'positive' : account < 0 ? 'negative' : '');
+    renderOvertime('month', overtimeBalanceUntil(y,m));
     $('previousMonthName').textContent = fmtMonth.format(new Date(y,m-1,1));
     $('previousMonthHours').textContent = `${transfer > 0 ? '+' : ''}${minutesToDecimalLabel(Math.abs(transfer)<1e-7 ? 0 : transfer)} h`;
     $('previousMonthHours').className = 'value ' + (transfer>1e-7 ? 'positive' : transfer < -1e-7 ? 'negative' : '');
@@ -671,7 +692,7 @@
 
 
 // PWA-Updatefunktion
-const APP_VERSION = '0.4.2';
+const APP_VERSION = '0.5.0';
 let pendingServiceWorker = null;
 
 async function registerPwaServiceWorker() {

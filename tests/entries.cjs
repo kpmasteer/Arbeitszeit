@@ -99,8 +99,46 @@ test('month account includes opening balance and all months, and follows month n
 });
 for (const [balance,text,color] of [[-90,'-1,50 h','value negative'],[0,'0,00 h','value ']]) {
   test(`month account renders ${balance} minutes with the correct sign and color`,()=>{
-    const t=app({selectedYear:2026,selectedMonth:8,settings:{monthlyHours:0,startBalanceMinutes:balance,startBalanceMonth:'2026-09'}});
+    const t=app({selectedYear:2026,selectedMonth:8,settings:{monthlyHours:0,startBalanceMinutes:balance,startBalanceMonth:'2026-09',timeDisplayMode:'decimal'}});
     assert.equal(t.el('monthAccountHours').textContent,text);
     assert.equal(t.el('monthAccountHours').className,color);
   });
 }
+
+for (const [mode,total,account,payout] of [
+  ['hours','+27:30','+20:00','7:30'],
+  ['decimal','+27,50 h','+20,00 h','7,50 h'],
+  ['both','+27:30 / 27,50 h','+20:00 / 20,00 h','7:30 / 7,50 h']
+]) {
+  test(`overview and month split match using ${mode} time display without modifying data`,()=>{
+    const state={selectedYear:2026,selectedMonth:8,settings:{monthlyHours:0,startBalanceMinutes:1650,startBalanceMonth:'2026-09',timeDisplayMode:mode},workEntries:[],sickDays:[],vacations:[]};
+    const t=app(state);
+    for(const id of ['overtimeTotal','monthOvertimeTotal']) assert.equal(t.el(id).textContent,total);
+    for(const id of ['overtimeAccount','monthAccountHours']) assert.equal(t.el(id).textContent,account);
+    for(const id of ['overtimePayout','monthPayoutHours']) assert.equal(t.el(id).textContent,payout);
+    assert.equal(t.el('mAccount').textContent,`Zeitkonto: ${account}`);
+    assert.deepEqual(t.read(),state);
+    t.click('nextMonth');
+    assert.equal(t.el('monthAccountHours').textContent,account);
+    const reloaded=app(t.read());
+    assert.equal(reloaded.el('monthAccountHours').textContent,account);
+    t.click('prevMonth');
+    assert.equal(t.el('overtimePayout').textContent,payout);
+  });
+}
+test('account and payout update after opening balance, work entry and display mode changes',()=>{
+  const t=app({selectedYear:2026,selectedMonth:8,settings:{monthlyHours:0,startBalanceMinutes:720,startBalanceMonth:'2026-09',timeDisplayMode:'hours'}});
+  assert.equal(t.el('overtimeAccount').textContent,'+12:00');
+  assert.equal(t.el('overtimePayout').textContent,'0:00');
+  t.el('setStartBalance').value='20:01';t.click('saveSettings');
+  assert.equal(t.el('overtimeTotal').textContent,'+20:01');
+  assert.equal(t.el('overtimeAccount').textContent,'+20:00');
+  assert.equal(t.el('overtimePayout').textContent,'0:01');
+  t.el('workDate').value='2026-09-10';t.el('startTime').value='08:00';t.el('endTime').value='09:00';t.click('addWork');
+  assert.equal(t.el('overtimePayout').textContent,'1:01');
+  t.el('setTimeDisplayMode').value='both';t.click('saveSettings');
+  assert.equal(t.el('monthPayoutHours').textContent,'1:01 / 1,02 h');
+  t.click('nextMonth');
+  assert.equal(t.el('monthPayoutHours').textContent,'0:00 / 0,00 h');
+  assert.equal(t.el('monthAccountHours').textContent,'+20:00 / 20,00 h');
+});

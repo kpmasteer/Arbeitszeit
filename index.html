@@ -66,6 +66,17 @@
           <div id="nextVacationBox"></div>
         </div>
       </div>
+      <div class="card overtime-summary" aria-labelledby="overtimeTitle">
+        <h2 id="overtimeTitle">Überstunden &amp; Auszahlung</h2>
+        <p class="row-sub" id="overtimePeriod"></p>
+        <div class="overtime-grid">
+          <div class="metric overtime-total"><div class="label">Überstunden gesamt</div><div class="value" id="overtimeTotal">0:00</div></div>
+          <div class="metric"><div class="label">Davon auf dem Zeitkonto</div><div class="value" id="overtimeAccount">0:00</div></div>
+          <div class="metric"><div class="label">Davon zur Auszahlung</div><div class="value" id="overtimePayout">0:00</div></div>
+        </div>
+        <p class="hours-note">Zeitkonto und Auszahlung teilen den Gesamtsaldo auf; sie kommen nicht zusätzlich dazu. Bis 20 Plusstunden bleiben auf dem Zeitkonto, Minusstunden vollständig.</p>
+        <p class="hours-note">Im Folgemonat wird nur das Zeitkonto übertragen. Der bisherige Auszahlungsanteil wird nicht erneut gezählt; neue Überstunden über 20 Stunden können wieder zur Auszahlung stehen. Diese Anzeige bestätigt keine tatsächliche Zahlung.</p>
+      </div>
       <div class="grid four" style="margin-top:16px">
         <div class="metric"><div class="label">Monatssoll</div><div class="value" id="mRequired">0:00</div></div>
         <div class="metric"><div class="label">Ist inkl. Zeitgutschrift</div><div class="value blue" id="mWorked">0:00</div></div>
@@ -176,10 +187,15 @@
       <div class="card">
         <h2>Monat im Überblick</h2>
         <p class="muted">Deine Arbeitszeiten, Abwesenheiten und offenen Tage.</p>
-        <div class="metric month-transfer month-account" aria-label="Gesamtes Stundenkonto">
-          <div><div class="label">Stundenkonto</div><div class="row-sub" id="monthAccountPeriod"></div></div>
-          <div class="value" id="monthAccountHours">0,00 h</div>
-          <p class="transfer-note">Startsaldo plus alle Monatsdifferenzen seit dem eingestellten Startzeitraum. Das volle Soll des ausgewählten Monats ist berücksichtigt.</p>
+        <div class="overtime-summary" aria-labelledby="monthOvertimeTitle">
+          <h3 id="monthOvertimeTitle">Überstunden &amp; Auszahlung</h3>
+          <p class="row-sub" id="monthAccountPeriod"></p>
+          <div class="overtime-grid">
+            <div class="metric overtime-total"><div class="label">Überstunden gesamt</div><div class="value" id="monthOvertimeTotal">0:00</div></div>
+            <div class="metric"><div class="label">Davon auf dem Zeitkonto</div><div class="value" id="monthAccountHours">0:00</div></div>
+            <div class="metric"><div class="label">Davon zur Auszahlung</div><div class="value" id="monthPayoutHours">0:00</div></div>
+          </div>
+          <p class="hours-note">Aufteilung des Gesamtsaldos, keine zusätzlichen Stunden. Nur das Zeitkonto wird in den Folgemonat übertragen – höchstens 20 Plusstunden, Minusstunden unverändert. Der Auszahlungsanteil dieses Monats wird nicht erneut gezählt. Keine Bestätigung einer tatsächlichen Zahlung.</p>
         </div>
         <div class="metric month-transfer">
           <div><div class="label">Übertrag aus dem Vormonat</div><div class="row-sub" id="previousMonthName"></div></div>
@@ -308,7 +324,7 @@
           <div><label for="setStartBalance">Start Überstunden/Minus</label><input id="setStartBalance" type="text" placeholder="+0:00 oder -0:00" /></div>
           <div><label for="setStartBalanceMonth">Startzeitraum ab Monat</label><input id="setStartBalanceMonth" type="month" /></div>
         </div>
-        <p class="muted">Der Startsaldo wird als Anfangswert für das Zeitkonto verwendet. Ab dem Startzeitraum werden Monatsdifferenzen darauf gerechnet. Das Konto zeigt den Stand einschließlich des gesamten ausgewählten Monats. Änderungen an Stunden und Arbeitstagen gelten auch für frühere Monate.</p>
+        <p class="muted">Der Startsaldo ist der Anfangswert einschließlich bisheriger Überträge. Ab dem Startzeitraum werden Monatsdifferenzen darauf gerechnet. Pro Monat verbleiben höchstens 20 Plusstunden auf dem Zeitkonto; der Rest steht zur Auszahlung und wird im Folgemonat nicht erneut mitgeführt. Minusstunden bleiben erhalten. Das volle Soll des ausgewählten Monats zählt mit. Änderungen an Stunden und Arbeitstagen gelten auch rückwirkend und berechnen die Aufteilung neu.</p>
         <h3 style="margin-top:18px">Arbeitstage</h3>
         <div class="form-row three">
           <label><input type="checkbox" class="wd" value="1" style="width:auto"> Montag</label>
@@ -325,7 +341,7 @@
         <h3 style="margin-top:18px">App-Update</h3>
         <div class="soft-note">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div><b>Installierte Version: <span id="appVersion">0.4.2</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
+            <div><b>Installierte Version: <span id="appVersion">0.5.0</span></b><br><span id="updateStatus" class="muted">Die App prüft beim Start automatisch auf Updates.</span></div>
             <button type="button" id="checkUpdate" class="secondary">Nach Update suchen</button>
           </div>
         </div>

@@ -12,7 +12,7 @@ function app(overrides = {}) {
   const context = vm.createContext({ Intl, console, localStorage: { getItem: () => null } });
   const exports = `\n globalThis.api = {
     setState(value) { state = value; }, defaultState, monthWorked, workedOnDate,
-    monthRequired, requiredForDate, accountBalanceUntil, vacationDaysBetween,
+    monthRequired, requiredForDate, accountBalanceUntil, splitOvertime, overtimeBalanceUntil, vacationDaysBetween,
     parseHours, parseDecimalHours, calcTimeRangeMinutes, minutesToText, summary,
     monthDayStats, countMonthMarkedDays, monthHourBreakdown, previousMonthTransfer,
     holidayOnDate, holidaysForYear, dayOverview, manualWorkOnDate,
@@ -27,6 +27,52 @@ function app(overrides = {}) {
   return { api, state };
 }
 const near = (actual, expected) => assert(Math.abs(actual - expected) < 1e-7, `${actual} != ${expected}`);
+
+for (const [total,account,payout] of [[720,720,0],[1200,1200,0],[1650,1200,450],[-180,-180,0],[1201,1200,1],[0,0,0]]) {
+  test(`overtime split: ${total} minutes = account ${account} + payout ${payout}`,()=>{
+    const {api}=app(); const result=api.splitOvertime(total);
+    near(result.total,total); near(result.account,account); near(result.payout,payout);
+    near(result.account+result.payout,result.total);
+  });
+}
+test('payout limit applies to total including carry, and earlier payouts never recur',()=>{
+  const {api,state}=app({monthlyHours:40,startBalanceMinutes:900,startBalanceMonth:'2026-07'});
+  state.workEntries=[{type:'monthly',date:'2026-07-01',minutes:2700},
+    {type:'monthly',date:'2026-08-01',minutes:2850},{type:'monthly',date:'2026-09-01',minutes:2400}];
+  const before=JSON.stringify(state);
+  near(api.overtimeBalanceUntil(2026,6).payout,0); // 15h initial + 5h July = 20h.
+  let result=api.overtimeBalanceUntil(2026,7);
+  near(result.total,1650); near(result.account,1200); near(result.payout,450);
+  result=api.overtimeBalanceUntil(2026,8);
+  near(result.total,1200); near(result.payout,0); near(result.paidBefore,450);
+  near(result.total+result.paidBefore,1650);
+  assert.equal(JSON.stringify(state),before); // Derived display never edits source records.
+  state.workEntries[2].minutes=2460;
+  result=api.overtimeBalanceUntil(2026,8);
+  near(result.total,1260); near(result.account,1200); near(result.payout,60);
+  state.workEntries[2].minutes=2100;
+  result=api.overtimeBalanceUntil(2026,8);
+  near(result.account,900); near(result.payout,0); // Minus 5h consumes retained balance only.
+});
+test('payout rollover crosses December/January and recalculates corrected prior entries',()=>{
+  const {api,state}=app({monthlyHours:0,startBalanceMinutes:1650,startBalanceMonth:'2026-12'});
+  state.workEntries=[{type:'daily',date:'2027-01-04',minutes:60}];
+  let result=api.overtimeBalanceUntil(2027,0);
+  near(result.total,1260); near(result.payout,60); near(result.paidBefore,450);
+  state.settings.startBalanceMinutes=600;
+  result=api.overtimeBalanceUntil(2027,0);
+  near(result.total,660); near(result.payout,0); near(result.paidBefore,0);
+  state.settings.startBalanceMinutes=-180;
+  result=api.overtimeBalanceUntil(2027,0);
+  near(result.account,-120); near(result.payout,0);
+});
+test('fractional target minutes are preserved and floating residue creates no payout',()=>{
+  const {api}=app();
+  let result=api.splitOvertime(1200.2);
+  near(result.account,1200); near(result.payout,0.2); near(result.total,1200.2);
+  result=api.splitOvertime(1200+1e-10);
+  assert.equal(result.payout,0);
+});
 
 test('60 monthly hours stay exactly 3600 minutes; free Sundays receive zero', () => {
   const { api, state } = app();
